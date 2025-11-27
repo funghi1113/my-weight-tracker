@@ -13,227 +13,259 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* ---------------- 配色與變數 ---------------- */
+    /* ---------------- 1. 全局變數與重置 ---------------- */
     :root {
-      --bg: #f4f6f9; 
-      --card: #ffffff; 
-      --text: #333333; 
-      --text-secondary: #666;
-      --accent: #2e7d32;      
-      --accent-hover: #1b5e20;
-      --border: #e0e0e0;
+      --bg: #f4f7f6;            /* 背景色 */
+      --card-bg: #ffffff;       /* 卡片白 */
+      --primary: #2e7d32;       /* 主色綠 */
+      --primary-light: #e8f5e9; 
+      --text-main: #333333;     
+      --text-sub: #757575;      
+      --border: #e0e0e0;        
+      --shadow: 0 8px 24px rgba(0,0,0,0.06); /* 更柔和的陰影 */
+      
+      /* 功能色 */
       --google-blue: #4285F4;
-      --bmi-under: #4fc3f7; --bmi-normal: #66bb6a; --bmi-over: #ffa726; --bmi-obese: #ef5350;
-      --hover-lift: -4px;
-      --hover-shadow: 0 10px 20px rgba(0,0,0,0.12);
+      
+      /* 圓角 */
+      --radius-card: 18px;
+      --radius-btn: 14px;
     }
 
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 40px; overflow-x: hidden; }
+    body { 
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      background: var(--bg); color: var(--text-main); padding-bottom: 60px; 
+      -webkit-font-smoothing: antialiased;
+    }
 
-    /* Header */
+    /* ---------------- 2. 導航列 ---------------- */
     header { 
-        display: flex; justify-content: space-around; padding: 12px 0; 
-        background: #ffffff; position: sticky; top: 0; z-index: 100; 
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
-        transition: all 0.3s ease;
+        display: flex; justify-content: center; gap: 15px; padding: 15px 20px; 
+        background: rgba(255,255,255,0.95); position: sticky; top: 0; z-index: 100; 
+        backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
     }
     header button { 
-        background: none; border: none; color: var(--text-secondary); font-size: 15px; 
-        padding: 8px 16px; cursor: pointer; font-weight: bold; position: relative;
-        transition: color 0.3s ease;
+        background: transparent; border: none; color: var(--text-sub); 
+        font-size: 15px; font-weight: 600; padding: 8px 16px; border-radius: 30px;
+        transition: all 0.2s ease; cursor: pointer;
     }
-    header button::after {
-        content: ''; position: absolute; bottom: 0; left: 50%; width: 0; height: 3px; 
-        background: var(--accent); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); transform: translateX(-50%); border-radius: 2px;
+    header button.active { 
+        background: var(--primary-light); color: var(--primary); 
     }
-    header button.active { color: var(--accent); }
-    header button.active::after { width: 80%; }
 
-    /* Page & Animations */
-    .page { display: none; padding: 20px; padding-bottom: 90px; max-width: 600px; margin: 0 auto; }
-    .fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    /* ---------------- 3. 卡片與版面 (修正貼邊問題) ---------------- */
+    .page { 
+        display: none; 
+        padding: 24px 20px; /* 加大頁面左右邊距，讓卡片不要貼著螢幕 */
+        max-width: 600px; margin: 0 auto; 
+        animation: fadeIn 0.4s ease; 
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Cards */
     .card { 
-        background: var(--card); padding: 18px; border-radius: 16px; margin-bottom: 18px; 
-        border: 1px solid transparent; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.04);
-        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+        background: var(--card-bg); 
+        padding: 24px; /* 增加卡片內部留白，讓文字不要貼邊 */
+        border-radius: var(--radius-card); 
+        margin-bottom: 20px; 
+        box-shadow: var(--shadow); 
+        border: 1px solid transparent;
+        transition: transform 0.2s;
+        position: relative;
     }
-    .card:hover { transform: translateY(var(--hover-lift)); box-shadow: var(--hover-shadow); border-color: rgba(46, 125, 50, 0.2); }
-
-    h2 { margin-top: 0; font-size: 1.25rem; color: var(--accent); display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 15px; }
-    label { display: block; margin-top: 12px; font-size: 0.9em; color: var(--text-secondary); font-weight: 600; }
-    textarea, input { 
-        width: 100%; padding: 12px; margin-top: 6px; border-radius: 10px; 
-        border: 2px solid #f0f0f0; background: #fff; color: var(--text); 
-        box-sizing: border-box; font-size: 16px; transition: all 0.3s ease;
-    }
-    textarea:focus, input:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1); transform: scale(1.01); }
-
-    /* Buttons */
-    button.save-btn { 
-        width: 100%; padding: 15px; border: none; 
-        background: linear-gradient(135deg, var(--accent), var(--accent-hover)); 
-        color: white; margin-top: 15px; border-radius: 12px; 
-        font-size: 16px; font-weight: bold; cursor: pointer; 
-        box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3); 
-        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-    button.save-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(46, 125, 50, 0.4); }
-    button.save-btn:active { transform: scale(0.96); }
+    /* 左側裝飾線 */
+    .card.accent-border { border-left: 5px solid var(--primary); }
     
-    .filter-btn-group { display: flex; gap: 8px; margin-bottom: 15px; }
-    .filter-btn-group button { flex: 1; padding: 10px; background: #e0e0e0; border: none; color: #555; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; }
-    .filter-btn-group button:hover { background: #d0d0d0; }
-    .filter-btn-group button.active { background: var(--accent); color: white; box-shadow: 0 4px 8px rgba(46, 125, 50, 0.3); transform: translateY(-1px); }
+    /* 標題樣式 */
+    h2 { margin: 0 0 18px 0; font-size: 1.2rem; color: var(--text-main); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    h3 { margin: 0 0 12px 0; font-size: 1.05rem; color: var(--text-main); font-weight: 600; }
+
+    /* ---------------- 4. 輸入框與按鈕 ---------------- */
+    label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-sub); font-weight: 500; }
+    
+    input, textarea { 
+        width: 100%; padding: 14px; border-radius: var(--radius-btn); 
+        border: 1px solid #cfd8dc; background: #fff; color: var(--text-main); 
+        font-size: 16px; box-sizing: border-box; transition: border 0.2s; margin-bottom: 16px;
+    }
+    input:focus, textarea:focus { outline: none; border-color: var(--primary); background: #fff; }
+
+    .btn-main { 
+        width: 100%; padding: 16px; border: none; border-radius: var(--radius-btn);
+        background: var(--primary); color: white; font-size: 16px; font-weight: 600; 
+        cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25); transition: filter 0.2s;
+    }
+    .btn-main:active { filter: brightness(0.9); transform: scale(0.98); }
+    
+    .btn-outline {
+        background: white; color: var(--primary); border: 1px solid var(--primary);
+        box-shadow: none;
+    }
+
+    /* ---------------- 5. 歷史紀錄列表 (修正排版) ---------------- */
+    /* 這裡移除了錯誤的 padding 設定 */
+    .log-item { 
+        display: flex; flex-direction: column; gap: 10px;
+        /* 這裡不需要 padding，因為 .card 已經有了 24px padding */
+        cursor: pointer;
+    }
+
+    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .log-date { font-size: 1.1rem; font-weight: 700; color: var(--text-main); letter-spacing: 0.5px; }
+    
+    .log-actions { display: flex; gap: 8px; }
+    .btn-mini { 
+        padding: 6px 14px; font-size: 13px; border-radius: 8px; border: none; cursor: pointer; 
+        font-weight: 500; background: #f5f5f5; color: var(--text-sub);
+    }
+    .btn-mini:active { background: #e0e0e0; }
+    .btn-mini.edit { background: #e3f2fd; color: #1565c0; }
+    .btn-mini.del { background: #ffebee; color: #c62828; }
+
+    .log-stats { display: flex; align-items: baseline; gap: 12px; }
+    .log-weight { font-size: 1.8rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .log-unit { font-size: 1rem; color: var(--text-sub); font-weight: 500; }
+    .log-bmi { 
+        font-size: 0.9rem; padding: 4px 10px; border-radius: 6px; 
+        background: var(--primary-light); color: var(--primary); font-weight: 600; 
+    }
+
+    .log-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+    .tag { 
+        font-size: 0.85rem; color: var(--text-sub); background: #f0f2f5; 
+        padding: 6px 12px; border-radius: 8px; width: 100%;
+        /* 如果內容太長，讓它變省略號 */
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ---------------- 6. 其他組件 ---------------- */
+    .backup-row { display: flex; gap: 12px; margin-top: 12px; }
+    .backup-row button { flex: 1; margin: 0; }
+
+    .filter-btn-group { display: flex; background: #eceff1; padding: 4px; border-radius: 14px; margin-bottom: 24px; }
+    .filter-btn-group button { flex: 1; background: transparent; color: var(--text-sub); padding: 10px; border-radius: 10px; border:none; font-size:14px; font-weight: 500; }
+    .filter-btn-group button.active { background: white; color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.08); font-weight: 700; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .stat-box { background: #ffffff; padding: 20px; border-radius: 16px; text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .stat-val { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
+    .stat-label { font-size: 0.85rem; color: var(--text-sub); margin-top: 6px; }
+
+    .chart-container { position: relative; height: 240px; width: 100%; }
 
     /* BMI Spectrum */
-    .bmi-container { margin-top: 20px; background: #fafafa; padding: 15px; border-radius: 10px; border: 1px solid #eee; transition: all 0.3s ease; }
-    .spectrum-bar { height: 16px; width: 100%; border-radius: 8px; position: relative; margin: 30px 0 20px 0; background: linear-gradient(to right, var(--bmi-under) 0%, var(--bmi-under) 17.5%, var(--bmi-normal) 17.5%, var(--bmi-normal) 45%, var(--bmi-over) 45%, var(--bmi-over) 60%, var(--bmi-obese) 60%, var(--bmi-obese) 100%); box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
-    .spectrum-marker { 
-        position: absolute; top: -18px; width: 0; height: 0; 
-        border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 14px solid #222; 
-        transform: translateX(-50%); transition: left 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
-        z-index: 10; display: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
-    }
-    .spectrum-marker::after { content: attr(data-bmi); position: absolute; top: -24px; left: 50%; transform: translateX(-50%); font-size: 13px; font-weight: bold; color: #222; white-space: nowrap; }
-    .spectrum-labels { position: relative; height: 20px; font-size: 0.8em; color: #777; font-weight: bold; }
-    .label-tick { position: absolute; transform: translateX(-50%); top: -15px; }
-    .label-line { position: absolute; top: -24px; height: 24px; width: 1px; background: rgba(255,255,255,0.6); z-index: 5; }
-    .bmi-status-text { text-align: center; margin-bottom: 5px; font-weight: bold; font-size: 1.1em; color: #333; }
-    .bmi-value-big { font-size: 1.4em; color: var(--accent); margin-right: 5px; }
-    .goal-diff-box { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ddd; font-size: 0.95em; text-align: center; color: #555; line-height: 1.6; }
-
-    /* History List */
-    .log-item { 
-        position: relative; padding-right: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; 
-        transition: background 0.2s; opacity: 0; transform: translateY(20px);
-    }
-    @keyframes staggerSlideIn { to { opacity: 1; transform: translateY(0); } }
-    .log-item:last-child { border-bottom: none; }
-    .log-item:hover { background-color: #f9fff9; }
-    .log-date { color: var(--accent); font-weight: bold; margin-bottom: 4px; display:flex; align-items:center; gap:5px; }
-    .log-sub { font-size: 0.85em; color: #777; margin-top: 4px; background: #f5f5f5; padding: 4px 8px; border-radius: 4px; display: inline-block; }
-    .action-buttons { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; }
-    .btn-icon { padding: 6px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: transform 0.2s; }
-    .btn-icon:hover { transform: scale(1.1); }
-    .btn-edit { background: #e3f2fd; color: #1565c0; }
-    .btn-delete { background: #ffebee; color: #c62828; }
-
+    .spectrum-bar { height: 14px; border-radius: 7px; position: relative; margin: 35px 0 25px 0; background: linear-gradient(to right, #4fc3f7 0%, #4fc3f7 17.5%, #66bb6a 17.5%, #66bb6a 45%, #ffa726 45%, #ffa726 60%, #ef5350 60%, #ef5350 100%); }
+    .spectrum-marker { position: absolute; top: -16px; width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 11px solid #333; transform: translateX(-50%); transition: left 0.5s ease; }
+    
     /* Modal */
-    .modal-overlay { 
-        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; 
-        backdrop-filter: blur(3px); opacity: 0; transition: opacity 0.3s ease;
-    }
-    .modal-overlay.show { display: flex; opacity: 1; }
-    .modal-content { 
-        background: white; width: 90%; max-width: 500px; max-height: 85vh; border-radius: 20px; padding: 25px; overflow-y: auto; 
-        box-shadow: 0 20px 50px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .modal-overlay.show .modal-content { transform: scale(1); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; margin-bottom: 15px; padding-bottom: 10px; }
-    .modal-header h3 { font-size: 1.5rem; color: var(--accent); }
-    .close-btn { font-size: 28px; color: #999; cursor: pointer; line-height: 1; transition: color 0.2s; }
-    .close-btn:hover { color: #333; }
-
-    /* Stats & Details */
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center; }
-    .stat-box { 
-        background: #ffffff; padding: 20px; border-radius: 16px; border: 1px solid #eee; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: transform 0.3s ease;
-    }
-    .stat-box:hover { transform: translateY(-5px); }
-    .stat-val { font-size: 1.8em; font-weight: 800; color: var(--accent); }
-    .detail-row { margin-bottom: 12px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
-    .detail-label { color: #888; font-size: 0.85em; margin-bottom: 5px; }
-    .detail-value { color: #333; font-size: 1.05em; line-height: 1.5; }
-
-    /* Chart Container */
-    .chart-container {
-        position: relative;
-        height: 250px;
-        width: 100%;
-        margin-bottom: 10px;
-    }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+    .modal-overlay.show { display: flex; }
+    .modal-content { background: white; width: 85%; max-width: 420px; border-radius: 24px; padding: 28px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    
+    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed var(--border); }
+    .detail-label { color: var(--text-sub); font-size: 0.95rem; }
+    .detail-val { color: var(--text-main); font-weight: 600; text-align: right; max-width: 65%; line-height: 1.4; }
   </style>
 </head>
 <body>
+
   <header>
     <button id="tab-today" class="active" onclick="switchTab('today')">今日紀錄</button>
     <button id="tab-history" onclick="switchTab('history')">歷史紀錄</button>
     <button id="tab-dashboard" onclick="switchTab('dashboard')">分析儀表板</button>
   </header>
 
-  <!-- 今日紀錄 -->
-  <div id="page-today" class="page fade-in-up" style="display:block;">
-    <div class="card" style="border-left: 5px solid var(--accent);">
-        <h2 style="margin-bottom:10px; font-size:1.1rem;">⚙️ 個人檔案 & 目標</h2>
-        <div style="display:flex; gap:10px;">
+  <!-- 1. 今日紀錄 -->
+  <div id="page-today" class="page" style="display:block;">
+    
+    <div class="card accent-border">
+        <h2>⚙️ 個人檔案 & 目標</h2>
+        <div style="display:flex; gap:16px;">
             <div style="flex:1"><label>身高 (cm)</label><input type="number" id="userHeight" placeholder="170" oninput="calculateBMI()" /></div>
             <div style="flex:1"><label>目標體重 (kg)</label><input type="number" id="userGoal" placeholder="60" oninput="calculateBMI()" /></div>
         </div>
-        <div id="bmiContainer" class="bmi-container">
-            <div id="bmiPlaceholder" style="text-align:center; color:#888; padding:10px;">請輸入「身高」與「今日體重」</div>
-            <div id="bmiContent" style="display:none;">
-                <div class="bmi-status-text">BMI <span id="bmiValue" class="bmi-value-big">--</span> <span id="bmiCategory" style="padding:2px 8px; border-radius:4px; font-size:0.8em; color:white;">--</span></div>
-                <div class="spectrum-bar">
-                    <div id="bmiMarker" class="spectrum-marker" data-bmi=""></div>
-                    <div class="label-line" style="left:17.5%"></div><div class="label-line" style="left:45%"></div><div class="label-line" style="left:60%"></div>
-                </div>
-                <div class="spectrum-labels">
-                    <span style="position:absolute; left:0%;">15</span><span class="label-tick" style="left:17.5%;">18.5</span><span class="label-tick" style="left:45%;">24</span><span class="label-tick" style="left:60%;">27</span><span style="position:absolute; right:0%;">35+</span>
-                </div>
-                <div id="goalDiffText" class="goal-diff-box"></div>
+        
+        <div id="bmiContainer" style="display:none; margin-top:10px; padding-top:16px; border-top:1px dashed var(--border);">
+            <div style="text-align:center; font-size:1.1rem; font-weight:bold; color:var(--text-main);">
+                BMI <span id="bmiValue" style="color:var(--primary); font-size:1.6rem;">--</span>
+                <span id="bmiCategory" style="font-size:0.85rem; padding:4px 10px; border-radius:6px; color:white; background:#ccc; vertical-align:middle; margin-left:6px;">--</span>
             </div>
+            <div class="spectrum-bar">
+                <div id="bmiMarker" class="spectrum-marker"></div>
+            </div>
+            <div id="goalDiffText" style="text-align:center; font-size:0.95rem; color:var(--text-sub); margin-top:15px;"></div>
         </div>
+        <div id="bmiPlaceholder" style="text-align:center; color:var(--text-sub); font-size:0.9rem; padding:10px;">請輸入身高與今日體重以查看分析</div>
     </div>
+
     <form id="trackerForm">
       <div class="card">
-        <h2>📅 基本資料</h2><label>日期</label><input type="date" name="date" required />
-        <div style="display:flex; gap:10px;"><div style="flex:1"><label>今日體重</label><input type="number" name="weight" id="inputWeight" step="0.1" placeholder="0.0" oninput="calculateBMI()" /></div><div style="flex:1"><label>喝水 (ml)</label><input type="number" name="water" placeholder="0" /></div></div>
+        <h2>📅 基本資料</h2>
+        <label>日期</label><input type="date" name="date" required />
+        <div style="display:flex; gap:16px;">
+            <div style="flex:1"><label>今日體重 (kg)</label><input type="number" name="weight" id="inputWeight" step="0.1" placeholder="0.0" oninput="calculateBMI()" /></div>
+            <div style="flex:1"><label>喝水量 (ml)</label><input type="number" name="water" placeholder="0" /></div>
+        </div>
       </div>
+
       <div class="card">
-        <h2>🍽️ 飲食</h2><label>總熱量 (kcal)</label><input type="number" name="calories" placeholder="選填" />
-        <label>早餐</label><textarea name="breakfast" rows="1"></textarea><label>午餐</label><textarea name="lunch" rows="1"></textarea><label>晚餐</label><textarea name="dinner" rows="1"></textarea><label>點心</label><textarea name="snacks" rows="1"></textarea>
+        <h2>🍽️ 飲食攝取</h2>
+        <label>總熱量 (kcal)</label><input type="number" name="calories" placeholder="選填" />
+        <label>早餐</label><textarea name="breakfast" rows="1" placeholder="吃了什麼？"></textarea>
+        <label>午餐</label><textarea name="lunch" rows="1"></textarea>
+        <label>晚餐</label><textarea name="dinner" rows="1"></textarea>
+        <label>點心</label><textarea name="snacks" rows="1"></textarea>
       </div>
+
       <div class="card">
-        <h2>🏃 運動/備註</h2><label>內容</label><textarea name="exercise" rows="1"></textarea><label>時長 (分鐘)</label><input type="number" name="exercise_time" /><label>備註</label><textarea name="notes" rows="2"></textarea>
+        <h2>🏃 運動與備註</h2>
+        <label>運動內容</label><textarea name="exercise" rows="1"></textarea>
+        <div style="display:flex; gap:16px;">
+            <div style="flex:1"><label>運動時長 (分)</label><input type="number" name="exercise_time" /></div>
+        </div>
+        <label>心情 / 備註</label><textarea name="notes" rows="2"></textarea>
       </div>
-      <button type="submit" class="save-btn">儲存 / 更新紀錄</button>
+
+      <button type="submit" class="btn-main">💾 儲存紀錄</button>
     </form>
   </div>
 
-  <!-- 歷史紀錄 -->
-  <div id="page-history" class="page fade-in-up">
+  <!-- 2. 歷史紀錄 (修復版) -->
+  <div id="page-history" class="page">
     <h2>📒 歷史紀錄</h2>
     
-    <div class="card" style="padding:15px; background:#f1f8ff; border:1px solid #d0e3ff;">
-        <h3 style="margin:0 0 10px 0; color:var(--google-blue); font-size:1.1rem;">☁️ Google 雲端同步</h3>
-        <div style="background:#e8f0fe; padding:8px; border-radius:6px; margin-bottom:10px; font-size:0.9em; color:#1967d2;">
-            ✅ 已連結至您的專屬雲端資料庫
+    <!-- 雲端同步 -->
+    <div class="card accent-border">
+        <h3>☁️ 雲端同步 (Google Sheets)</h3>
+        <div style="font-size:0.9rem; color:var(--text-sub); margin-bottom:16px; line-height:1.5;">
+            將資料同步到您的專屬雲端試算表，換手機也不怕。
         </div>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button onclick="uploadToCloud()" class="save-btn" style="margin:0; background:var(--google-blue); font-size:14px; flex:1;">⬆️ 上傳備份</button>
-            <button onclick="downloadFromCloud()" class="save-btn" style="margin:0; background:white; color:var(--google-blue); border:1px solid var(--google-blue); font-size:14px; flex:1;">⬇️ 下載還原</button>
+        <div class="backup-row">
+            <button onclick="uploadToCloud()" class="btn-main">⬆️ 上傳</button>
+            <button onclick="downloadFromCloud()" class="btn-main btn-outline">⬇️ 下載</button>
         </div>
     </div>
 
-    <div class="card" style="padding:10px; background:#fafafa;">
-        <p style="margin:0 0 10px 0; font-size:0.9em; color:#666;">本地檔案備份 (JSON)</p>
-        <div style="display:flex; gap:10px;">
-            <button onclick="exportData()" class="save-btn" style="margin:0; background:#666; font-size:14px;">匯出</button>
-            <button onclick="document.getElementById('importFile').click()" class="save-btn" style="margin:0; background:#666; font-size:14px;">匯入</button>
+    <!-- 本地備份 -->
+    <div class="card accent-border" style="border-left-color: #607d8b;">
+        <h3>💾 本地備份 (JSON 檔案)</h3>
+        <div style="font-size:0.9rem; color:var(--text-sub); margin-bottom:16px; line-height:1.5;">
+            將資料匯出成檔案保存，或從檔案還原。
+        </div>
+        <div class="backup-row">
+            <button onclick="exportData()" class="btn-main" style="background:#607d8b; border-color:#607d8b;">匯出</button>
+            <button onclick="document.getElementById('importFile').click()" class="btn-main btn-outline" style="color:#607d8b; border-color:#607d8b;">匯入</button>
             <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" />
         </div>
     </div>
+
+    <!-- 列表區 -->
     <div id="historyList"></div>
   </div>
 
-  <!-- 儀表板 -->
-  <div id="page-dashboard" class="page fade-in-up">
+  <!-- 3. 分析儀表板 -->
+  <div id="page-dashboard" class="page">
     <h2>📊 數據分析</h2>
     <div class="filter-btn-group">
         <button onclick="updateDashboard(7)" id="btn-7">7 天</button>
@@ -241,59 +273,46 @@
         <button onclick="updateDashboard('all')" id="btn-all">全部</button>
     </div>
     
-    <div class="card">
-        <div class="stats-grid">
-            <div class="stat-box"><div class="stat-val" id="avgWeight">--</div><div class="stat-label">平均體重 (kg)</div></div>
-            <div class="stat-box"><div class="stat-val" id="avgCalories">--</div><div class="stat-label">平均熱量 (kcal)</div></div>
-        </div>
+    <div class="stats-grid" style="margin-bottom:20px;">
+        <div class="stat-box"><div class="stat-val" id="avgWeight">--</div><div class="stat-label">平均體重 (kg)</div></div>
+        <div class="stat-box"><div class="stat-val" id="avgCalories">--</div><div class="stat-label">平均熱量 (kcal)</div></div>
     </div>
 
-    <!-- 1. 體重趨勢 -->
     <div class="card">
         <h3>📈 體重趨勢</h3>
-        <div class="chart-container">
-            <canvas id="weightChart"></canvas>
-        </div>
+        <div class="chart-container"><canvas id="weightChart"></canvas></div>
     </div>
 
-    <!-- 2. BMI 變化 -->
     <div class="card">
-        <h3>⚖️ BMI 變化趨勢</h3>
-        <div class="chart-container">
-            <canvas id="bmiChart"></canvas>
-        </div>
-        <p style="font-size:0.8em; color:#888; text-align:center; margin-top:5px;">
-            綠色區域：正常範圍 (18.5 ~ 24)
-        </p>
+        <h3>⚖️ BMI 變化</h3>
+        <div class="chart-container"><canvas id="bmiChart"></canvas></div>
     </div>
 
-    <!-- 3. 喝水與熱量 (混合圖) -->
     <div class="card">
-        <h3>💧 喝水與 🔥 熱量</h3>
-        <div class="chart-container">
-            <canvas id="dietChart"></canvas>
-        </div>
+        <h3>💧 飲食與熱量</h3>
+        <div class="chart-container"><canvas id="dietChart"></canvas></div>
     </div>
 
-    <!-- 4. 運動時間 -->
     <div class="card">
-        <h3>🏃 運動時長 (分鐘)</h3>
-        <div class="chart-container">
-            <canvas id="exerciseChart"></canvas>
-        </div>
+        <h3>🏃 運動時長</h3>
+        <div class="chart-container"><canvas id="exerciseChart"></canvas></div>
     </div>
   </div>
 
-  <!-- Modal -->
+  <!-- Modal 詳細視窗 -->
   <div id="detailModal" class="modal-overlay" onclick="closeModal(event)">
       <div class="modal-content" onclick="event.stopPropagation()">
-          <div class="modal-header"><h3 id="modalDate">日期</h3><span class="close-btn" onclick="closeModal()">&times;</span></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+              <h2 style="margin:0; font-size:1.5rem;">📅 <span id="modalDate"></span></h2>
+              <button onclick="closeModal()" style="background:none; border:none; font-size:1.8rem; color:#ccc; cursor:pointer;">&times;</button>
+          </div>
           <div id="modalBody"></div>
-          <div style="margin-top:20px; display:flex; gap:10px;"><button id="modalEditBtn" class="save-btn" style="background:var(--accent); margin:0;">✏️ 修改</button><button onclick="closeModal()" class="save-btn" style="background:#888; margin:0;">關閉</button></div>
+          <button id="modalEditBtn" class="btn-main" style="margin-top:24px;">✏️ 修改此紀錄</button>
       </div>
   </div>
 
 <script>
+  // ------------------ 邏輯區 ------------------
   const GAS_URL = "https://script.google.com/macros/s/AKfycbwvOSjRRC5VDaLzU_PsoAlpgQb4iHaSYePTrMZs9ZZ6NeeE51T4LQNYtvNWSVqlJCg88Q/exec";
   const STORAGE_KEY = 'weightTrackerLogs';
   const SETTINGS_KEY = 'weightTrackerSettings'; 
@@ -301,123 +320,129 @@
   let charts = { weight: null, bmi: null, diet: null, exercise: null };
 
   window.addEventListener('DOMContentLoaded', () => {
-    allLogs = loadLogs();
     loadSettings();
+    allLogs = loadLogs();
     document.querySelector('input[name="date"]').valueAsDate = new Date();
-    calculateBMI(); 
+    calculateBMI();
   });
 
-  // --- Helper ---
-  function cleanDate(dateStr) {
-      if(!dateStr) return "";
-      return dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
-  }
-  function getBMI(w, h_cm) {
-      if(!w || !h_cm || h_cm<=0) return null;
-      const h = h_cm / 100;
-      return (w / (h * h)).toFixed(1);
-  }
+  // Helper
+  function cleanDate(d) { return d && d.includes('T') ? d.split('T')[0] : d; }
+  function getBMI(w, h) { return (w && h) ? (w / ((h/100)**2)).toFixed(1) : null; }
 
-  // --- Cloud Sync ---
-  async function uploadToCloud() {
-      if(!confirm("確定上傳？這將覆蓋雲端資料。")) return;
-      try {
-          const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'backup', data: allLogs }) });
-          const result = await res.json();
-          alert(result.status === 'success' ? result.msg : "上傳失敗: " + result.msg);
-      } catch(e) { alert("連線失敗"); console.error(e); }
-  }
-  async function downloadFromCloud() {
-      if(!confirm("確定還原？這將覆蓋本機資料。")) return;
-      try {
-          const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'restore' }) });
-          const result = await res.json();
-          if(result.status === 'success') {
-              const cleanData = result.data.map(log => ({...log, date: cleanDate(log.date)}));
-              saveLogs(cleanData); renderHistory(); calculateBMI();
-              alert("還原成功！已載入 " + cleanData.length + " 筆資料。");
-          } else { alert("下載失敗"); }
-      } catch(e) { alert("連線失敗"); console.error(e); }
-  }
-
-  // --- Settings & BMI UI ---
+  // BMI & Settings
   function loadSettings() {
-    const saved = localStorage.getItem(SETTINGS_KEY);
-    if(saved) {
-        const settings = JSON.parse(saved);
-        if(settings.height) document.getElementById('userHeight').value = settings.height;
-        if(settings.goal) document.getElementById('userGoal').value = settings.goal;
-    }
-  }
-  function saveSettings() {
-    const height = document.getElementById('userHeight').value;
-    const goal = document.getElementById('userGoal').value;
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ height, goal }));
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    if(s.height) document.getElementById('userHeight').value = s.height;
+    if(s.goal) document.getElementById('userGoal').value = s.goal;
   }
   function calculateBMI() {
-    const heightStr = document.getElementById('userHeight').value;
-    const weightStr = document.getElementById('inputWeight').value;
-    const goalStr = document.getElementById('userGoal').value;
-    if(heightStr || goalStr) saveSettings();
+    const h = document.getElementById('userHeight').value;
+    const w = document.getElementById('inputWeight').value;
+    const g = document.getElementById('userGoal').value;
+    
+    if(h || g) localStorage.setItem(SETTINGS_KEY, JSON.stringify({ height: h, goal: g }));
 
-    const placeholder = document.getElementById('bmiPlaceholder');
-    const content = document.getElementById('bmiContent');
-    if (!heightStr || !weightStr) {
-        placeholder.style.display = 'block'; content.style.display = 'none'; return;
-    }
-    placeholder.style.display = 'none'; content.style.display = 'block';
+    const hasData = h && w;
+    document.getElementById('bmiPlaceholder').style.display = hasData ? 'none' : 'block';
+    document.getElementById('bmiContainer').style.display = hasData ? 'block' : 'none';
 
-    const bmi = getBMI(parseFloat(weightStr), parseFloat(heightStr));
-    if(!bmi) return;
+    if(!hasData) return;
 
+    const bmi = getBMI(w, h);
     document.getElementById('bmiValue').innerText = bmi;
+    
     const cat = document.getElementById('bmiCategory');
-    let l='', b='';
-    if (bmi < 18.5) { l='過輕'; b='var(--bmi-under)'; } 
-    else if (bmi < 24) { l='正常'; b='var(--bmi-normal)'; } 
-    else if (bmi < 27) { l='過重'; b='var(--bmi-over)'; } 
-    else { l='肥胖'; b='var(--bmi-obese)'; }
-    cat.innerText = l; cat.style.backgroundColor = b;
-
+    let color = '#66bb6a'; let text = '正常';
+    if(bmi<18.5) { color='#4fc3f7'; text='過輕'; }
+    else if(bmi>=24 && bmi<27) { color='#ffa726'; text='過重'; }
+    else if(bmi>=27) { color='#ef5350'; text='肥胖'; }
+    
+    cat.innerText = text; cat.style.backgroundColor = color;
+    
     let pct = ((bmi - 15) / 20) * 100;
-    if(pct<0)pct=0; if(pct>100)pct=100;
-    const mk = document.getElementById('bmiMarker');
-    mk.style.display = 'block'; mk.style.left = `${pct}%`; mk.setAttribute('data-bmi', bmi);
+    pct = Math.max(0, Math.min(100, pct));
+    document.getElementById('bmiMarker').style.left = `${pct}%`;
 
-    const goalDiff = document.getElementById('goalDiffText');
-    if(goalStr) {
-        const diff = (parseFloat(weightStr) - parseFloat(goalStr)).toFixed(1);
-        goalDiff.innerHTML = diff>0 ? `距離目標還需減 <b style="color:var(--bmi-over)">${diff}</b> kg` : `已低於目標 <b style="color:var(--bmi-normal)">${Math.abs(diff)}</b> kg`;
-    } else { goalDiff.innerText = '設定目標體重後自動計算差距'; }
+    const diffBox = document.getElementById('goalDiffText');
+    if(g) {
+        const diff = (w - g).toFixed(1);
+        if(diff > 0) diffBox.innerHTML = `距離目標還有 <b style="color:#ffa726">${diff}</b> kg`;
+        else diffBox.innerHTML = `已達成目標！低於 <b style="color:#66bb6a">${Math.abs(diff)}</b> kg`;
+    } else {
+        diffBox.innerText = "設定目標體重可查看差距";
+    }
   }
 
-  // --- CRUD ---
+  // CRUD
   function loadLogs() { 
       try { 
-          const raw = JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
-          return raw.map(log => ({...log, date: cleanDate(log.date)})).sort((a,b)=>new Date(b.date)-new Date(a.date)); 
-      } catch{return[];} 
+          return (JSON.parse(localStorage.getItem(STORAGE_KEY))||[])
+            .map(l=>({...l, date:cleanDate(l.date)}))
+            .sort((a,b)=>new Date(b.date)-new Date(a.date)); 
+      } catch { return []; }
   }
   function saveLogs(logs) {
-    const s = logs.map(log => ({...log, date: cleanDate(log.date)})).sort((a,b)=>new Date(b.date)-new Date(a.date));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); allLogs = s;
+      const s = logs.map(l=>({...l, date:cleanDate(l.date)})).sort((a,b)=>new Date(b.date)-new Date(a.date));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); allLogs = s;
   }
 
-  function switchTab(t) {
-    document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; p.classList.remove('fade-in-up'); });
-    document.querySelectorAll('header button').forEach(b => b.classList.remove('active'));
-    const target = document.getElementById(`page-${t}`);
-    target.style.display = 'block'; void target.offsetWidth; target.classList.add('fade-in-up');
-    document.getElementById(`tab-${t}`).classList.add('active');
+  // Render History (修正版：內容不再貼邊)
+  function renderHistory() {
+    const list = document.getElementById('historyList'); list.innerHTML="";
+    if(allLogs.length===0) { list.innerHTML='<p style="text-align:center;color:#999;margin-top:20px;">尚無紀錄</p>'; return; }
     
-    if(t==='history') renderHistory();
-    if(t==='dashboard') updateDashboard(7);
-    if(t==='today') { 
-        if(!document.querySelector('input[name="date"]').value) document.querySelector('input[name="date"]').valueAsDate=new Date(); 
-        calculateBMI(); 
-    }
+    const h = parseFloat(document.getElementById('userHeight').value);
+
+    allLogs.forEach((log,i) => {
+      const d = document.createElement('div'); d.className='card log-item'; 
+      d.onclick=()=>showDetails(i);
+
+      let weightHtml = '', bmiHtml = '';
+      if(log.weight) {
+          weightHtml = `<span class="log-weight">${log.weight}</span><span class="log-unit">kg</span>`;
+          if(h) {
+              const bmi = getBMI(log.weight, h);
+              let color = '#66bb6a'; 
+              if(bmi>=24 && bmi<27) color='#ffa726'; 
+              if(bmi>=27) color='#ef5350'; 
+              bmiHtml = `<span class="log-bmi" style="color:${color}; background:${color}15">BMI ${bmi}</span>`;
+          }
+      }
+
+      let tags = [];
+      if(log.exercise) tags.push(`🏃 運動`);
+      if(log.calories) tags.push(`🔥 ${log.calories} cal`);
+      if(log.notes) tags.push(`📝 備註`);
+      const tagHtml = tags.length ? `<div class="log-tags">${tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>` : `<div class="tag">無詳細紀錄</div>`;
+
+      d.innerHTML = `
+        <div class="log-header">
+            <div class="log-date">${cleanDate(log.date)}</div>
+            <div class="log-actions">
+                <button class="btn-mini edit" onclick="event.stopPropagation();editLog(${i})">修改</button>
+                <button class="btn-mini del" onclick="event.stopPropagation();deleteLog(${i})">刪除</button>
+            </div>
+        </div>
+        <div class="log-stats">
+            ${weightHtml}
+            ${bmiHtml}
+        </div>
+        ${tagHtml}
+      `;
+      list.appendChild(d);
+    });
   }
 
+  // Actions
+  function deleteLog(i) { if(confirm("確定刪除？")) { allLogs.splice(i,1); saveLogs(allLogs); renderHistory(); } }
+  function editLog(i) {
+      const l = allLogs[i]; const f = document.getElementById('trackerForm'); f.reset();
+      for(const k in l) if(f[k]) f[k].value=l[k];
+      f.date.value = cleanDate(l.date);
+      closeModal(); switchTab('today'); calculateBMI(); window.scrollTo({top:0,behavior:'smooth'});
+  }
+  
   document.getElementById("trackerForm").addEventListener('submit', function(e) {
     e.preventDefault();
     const fd = new FormData(this); const n={};
@@ -425,128 +450,101 @@
     if(!n.date) return alert("請選日期");
     n.date = cleanDate(n.date);
     const idx = allLogs.findIndex(l=>l.date===n.date);
-    if(idx!==-1) { if(!confirm(`已有 ${n.date} 紀錄，要更新嗎？`)) return; allLogs[idx]={...allLogs[idx],...n}; }
+    if(idx!==-1) { if(!confirm(`覆蓋 ${n.date} 的紀錄？`)) return; allLogs[idx]={...allLogs[idx],...n}; }
     else allLogs.unshift(n);
     saveLogs(allLogs); alert("已儲存"); this.reset();
     document.querySelector('input[name="date"]').valueAsDate=new Date(); calculateBMI();
   });
 
-  // --- Render ---
-  function renderHistory() {
-    const list = document.getElementById('historyList'); list.innerHTML="";
-    if(allLogs.length===0) { list.innerHTML='<p style="text-align:center;color:#999">無紀錄</p>'; return; }
-    const h = parseFloat(document.getElementById('userHeight').value);
+  function switchTab(t) {
+    document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+    document.querySelectorAll('header button').forEach(b=>b.classList.remove('active'));
+    document.getElementById(`page-${t}`).style.display='block';
+    document.getElementById(`tab-${t}`).classList.add('active');
+    if(t==='history') renderHistory();
+    if(t==='dashboard') updateDashboard(7);
+    if(t==='today') { 
+        if(!document.querySelector('input[name="date"]').value) document.querySelector('input[name="date"]').valueAsDate=new Date();
+        calculateBMI(); 
+    }
+  }
 
-    allLogs.forEach((log,i) => {
-      const d = document.createElement('div'); d.className='card log-item'; d.onclick=()=>showDetails(i);
-      d.style.animation = `staggerSlideIn 0.4s ease forwards`; d.style.animationDelay = `${i * 0.05}s`;
-      
-      let info = '';
-      if(log.weight) {
-          info += `體重: <strong>${log.weight}</strong> kg`;
-          if(h && h>0) {
-              const bmi = getBMI(log.weight, h);
-              let color = '#666';
-              if(bmi<18.5) color='var(--bmi-under)'; else if(bmi<24) color='var(--bmi-normal)'; else if(bmi<27) color='var(--bmi-over)'; else color='var(--bmi-obese)';
-              info += ` <span style="font-size:0.9em; color:${color}; font-weight:bold;">(BMI ${bmi})</span>`;
-          }
-      }
-      if(log.calories) info += ` | 🔥 ${log.calories}`;
-      
-      const displayDate = cleanDate(log.date);
-      d.innerHTML = `<div class="log-date">${displayDate}</div><div class="log-details">${info}</div>
-        <div class="log-sub">${log.exercise?'有運動':'無運動'} | ${log.notes?'有備註':'無備註'}</div>
-        <div class="action-buttons"><button class="btn-icon btn-edit" onclick="event.stopPropagation();editLog(${i})">修改</button><button class="btn-icon btn-delete" onclick="event.stopPropagation();deleteLog(${i})">刪除</button></div>`;
-      list.appendChild(d);
-    });
-  }
-  function deleteLog(i) { if(confirm("確定刪除？")) { allLogs.splice(i,1); saveLogs(allLogs); renderHistory(); } }
-  function editLog(i) {
-    const l = allLogs[i]; const f = document.getElementById('trackerForm'); f.reset();
-    for(const k in l) if(f[k]) f[k].value=l[k];
-    f.date.value = cleanDate(l.date);
-    closeModal(); switchTab('today'); calculateBMI(); window.scrollTo({top:0,behavior:'smooth'});
-  }
+  // Modal
   function showDetails(i) {
-      const l = allLogs[i]; const m=document.getElementById('detailModal'); const b=document.getElementById('modalBody');
+      const l = allLogs[i]; const b=document.getElementById('modalBody');
       document.getElementById('modalDate').innerText = cleanDate(l.date);
-      const row=(lb,v)=>v?`<div class="detail-row"><div class="detail-label">${lb}</div><div class="detail-value">${v}</div></div>`:'';
-      const meal=(ic,t,txt)=>txt?`<div style="display:flex;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #f9f9f9;"><span style="color:var(--accent);font-weight:bold;margin-right:8px;min-width:65px;">${ic} ${t}</span><span style="flex:1;">${txt}</span></div>`:'';
       
-      let h = row('體重', l.weight?`${l.weight} kg`:'') + row('熱量', l.calories?`${l.calories} kcal`:'') + row('喝水', l.water?`${l.water} ml`:'');
-      let d = meal('🍳','早餐',l.breakfast)+meal('🍱','午餐',l.lunch)+meal('🥗','晚餐',l.dinner)+meal('🍪','點心',l.snacks);
-      if(d) h+=`<div class="detail-row"><div class="detail-label">飲食</div><div class="detail-value" style="background:#fafafa;padding:8px;border-radius:8px;">${d}</div></div>`;
-      h += row('運動', l.exercise?`${l.exercise} (${l.exercise_time||0}分)`:'') + row('備註', l.notes);
+      const row = (lbl,val) => val ? `<div class="detail-row"><span class="detail-label">${lbl}</span><span class="detail-val">${val}</span></div>` : '';
       
-      b.innerHTML = h||'<p style="text-align:center;color:#999">無詳細資料</p>';
-      document.getElementById('modalEditBtn').onclick=()=>editLog(i); m.classList.add('show');
-  }
-  function closeModal(e) { if(e&&e.target!==e.currentTarget)return; document.getElementById('detailModal').classList.remove('show'); }
-  function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(allLogs,null,2)],{type:'application/json'})); a.download=`backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); }
-  function importData(e) { const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=(evt)=>{ try{ const d=JSON.parse(evt.target.result); if(Array.isArray(d)&&confirm(`覆蓋 ${allLogs.length} 筆資料?`)){ const cleanD = d.map(log => ({...log, date: cleanDate(log.date)})); saveLogs(cleanD); location.reload(); } }catch{alert("格式錯誤");} }; r.readAsText(f); }
+      let content = row('體重', l.weight?`${l.weight} kg`:'') + row('喝水', l.water?`${l.water} ml`:'') + row('熱量', l.calories?`${l.calories} kcal`:'');
+      if(l.breakfast) content += row('早餐', l.breakfast);
+      if(l.lunch) content += row('午餐', l.lunch);
+      if(l.dinner) content += row('晚餐', l.dinner);
+      if(l.snacks) content += row('點心', l.snacks);
+      if(l.exercise) content += row('運動', `${l.exercise} (${l.exercise_time||0}分)`);
+      if(l.notes) content += row('備註', l.notes);
 
-  // --- Advanced Charts ---
+      b.innerHTML = content || '<p style="text-align:center;color:#999">無詳細資料</p>';
+      document.getElementById('modalEditBtn').onclick=()=>editLog(i);
+      document.getElementById('detailModal').classList.add('show');
+  }
+  function closeModal(e) { if(e && e.target!==e.currentTarget) return; document.getElementById('detailModal').classList.remove('show'); }
+
+  // Cloud
+  async function uploadToCloud() {
+      if(!confirm("確定上傳？這將覆蓋雲端資料。")) return;
+      try {
+          const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'backup', data: allLogs }) });
+          const r = await res.json(); alert(r.status==='success'?r.msg:r.msg);
+      } catch(e) { alert("連線失敗"); }
+  }
+  async function downloadFromCloud() {
+      if(!confirm("確定還原？這將覆蓋本機資料。")) return;
+      try {
+          const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'restore' }) });
+          const r = await res.json();
+          if(r.status==='success') {
+              const d = r.data.map(l=>({...l, date:cleanDate(l.date)}));
+              saveLogs(d); renderHistory(); calculateBMI(); alert("還原成功！");
+          } else alert("下載失敗");
+      } catch(e) { alert("連線失敗"); }
+  }
+  // File
+  function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(allLogs)],{type:'application/json'})); a.download=`backup.json`; a.click(); }
+  function importData(e) { const f=e.target.files[0]; if(f){ const r=new FileReader(); r.onload=evt=>{ saveLogs(JSON.parse(evt.target.result).map(l=>({...l,date:cleanDate(l.date)}))); location.reload(); }; r.readAsText(f); } }
+
+  // Chart
   function updateDashboard(d) {
     document.querySelectorAll('.filter-btn-group button').forEach(b=>b.classList.remove('active'));
     document.getElementById(`btn-${d}`).classList.add('active');
+    let dt=[...allLogs]; if(d!=='all') dt=dt.slice(0,d); dt.reverse();
     
-    let dt=[...allLogs]; 
-    if(d!=='all') dt=dt.slice(0,d); 
-    dt.reverse();
+    const lbs=dt.map(l=>l.date.slice(5));
+    const ws=dt.map(l=>l.weight);
+    const cs=dt.map(l=>l.calories||0);
+    const wts=dt.map(l=>l.water||0);
+    const exs=dt.map(l=>l.exercise_time||0);
+    const h=document.getElementById('userHeight').value;
+    const bmis=ws.map(w=>getBMI(w,h));
 
-    const labels = dt.map(l => l.date.slice(5)); // MM-DD
-    const weights = dt.map(l => l.weight);
-    const cals = dt.map(l => l.calories || 0);
-    const waters = dt.map(l => l.water || 0);
-    const exTime = dt.map(l => l.exercise_time || 0);
-    
     // Avg
-    const validW = weights.filter(w=>w);
-    const validC = cals.filter(c=>c>0);
-    document.getElementById('avgWeight').innerText = validW.length ? (validW.reduce((a,b)=>a+b,0)/validW.length).toFixed(1) : '--';
-    document.getElementById('avgCalories').innerText = validC.length ? Math.round(validC.reduce((a,b)=>a+b,0)/validC.length) : '--';
+    const vW=ws.filter(w=>w); const vC=cs.filter(c=>c>0);
+    document.getElementById('avgWeight').innerText = vW.length?(vW.reduce((a,b)=>a+b,0)/vW.length).toFixed(1):'--';
+    document.getElementById('avgCalories').innerText = vC.length?Math.round(vC.reduce((a,b)=>a+b,0)/vC.length):'--';
 
-    // BMI
-    const h = parseFloat(document.getElementById('userHeight').value);
-    const bmis = weights.map(w => w && h ? getBMI(w, h) : null);
-
-    // 1. Weight Chart (Fix: beginAtZero: false)
-    renderChart('weightChart', 'weight', 'line', labels, [{
-        label: '體重 (kg)', data: weights, borderColor: '#2e7d32', backgroundColor: 'rgba(46,125,50,0.1)', fill: true, tension: 0.3
-    }], { x:{grid:{display:false}}, y:{beginAtZero:false} });
-
-    // 2. BMI Chart
-    renderChart('bmiChart', 'bmi', 'line', labels, [{
-        label: 'BMI', data: bmis, borderColor: '#9c27b0', backgroundColor: 'rgba(156,39,176,0.1)', fill: false, tension: 0.3
-    }], { x:{grid:{display:false}}, y:{beginAtZero:false} });
-
-    // 3. Diet Chart
-    renderChart('dietChart', 'diet', 'bar', labels, [
-        { type: 'bar', label: '喝水 (ml)', data: waters, backgroundColor: '#4fc3f7', yAxisID: 'y' },
-        { type: 'line', label: '熱量 (kcal)', data: cals, borderColor: '#ff9800', borderWidth: 2, yAxisID: 'y1', tension: 0.3 }
-    ], {
-        y: { type: 'linear', display: true, position: 'left', title: {display:true, text:'ml'} },
-        y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display:true, text:'kcal'} }
-    });
-
-    // 4. Exercise Chart
-    renderChart('exerciseChart', 'exercise', 'bar', labels, [{
-        label: '運動時間 (分)', data: exTime, backgroundColor: '#ef5350'
-    }]);
+    renderChart('weightChart', 'line', lbs, [{label:'體重',data:ws,borderColor:'#2e7d32',backgroundColor:'#2e7d3215',fill:true,tension:0.3}], {y:{beginAtZero:false}});
+    renderChart('bmiChart', 'line', lbs, [{label:'BMI',data:bmis,borderColor:'#8e24aa',backgroundColor:'#8e24aa15',fill:true,tension:0.3}], {y:{beginAtZero:false,grace:'10%'}});
+    renderChart('dietChart', 'bar', lbs, [
+        {label:'喝水',data:wts,backgroundColor:'#42a5f5',yAxisID:'y'},
+        {label:'熱量',data:cs,type:'line',borderColor:'#ffa726',yAxisID:'y1',tension:0.3}
+    ], {y:{position:'left'},y1:{position:'right',grid:{drawOnChartArea:false}}});
+    renderChart('exerciseChart', 'bar', lbs, [{label:'運動(分)',data:exs,backgroundColor:'#ef5350'}]);
   }
 
-  function renderChart(canvasId, key, type, labels, datasets, scalesOption = null) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      if (charts[key]) charts[key].destroy();
-      
-      const options = {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: true, position: 'bottom' } },
-          scales: scalesOption || { x:{grid:{display:false}}, y:{beginAtZero:true} }
-      };
-
-      charts[key] = new Chart(ctx, { type: type, data: { labels, datasets }, options });
+  function renderChart(id, type, labels, datasets, scales={y:{beginAtZero:true},x:{grid:{display:false}}}) {
+      const ctx = document.getElementById(id).getContext('2d');
+      if(charts[id]) charts[id].destroy();
+      charts[id] = new Chart(ctx, { type, data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales } });
   }
 
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
